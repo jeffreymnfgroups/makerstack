@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowDown, FileText, BarChart3, TrendingUp, Users, Download, Zap, Code, Layers, Palette, Rocket, Target } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 // Components
 import Navigation from '@/components/Navigation';
@@ -18,13 +19,38 @@ import author1 from '@/assets/author-1.jpg';
 import author2 from '@/assets/author-2.jpg';
 import playbookCover from '@/assets/playbook-1.jpg';
 
+// Define types for articles and content
+interface Article {
+  id: number;
+  title: string;
+  excerpt: string;
+  fullContent: string;
+  author: string;
+  date: string;
+  topic: string;
+  readTime: string;
+  image: string;
+}
+
+interface Content {
+  id: string;
+  title: string;
+  content: string;
+  author: string;
+  date: string;
+  readTime: string;
+  type: 'article' | 'tool';
+  image: string;
+}
+
 const Index = () => {
   const [selectedTopic, setSelectedTopic] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredArticles, setFilteredArticles] = useState<any[]>([]);
+  const [filteredArticles, setFilteredArticles] = useState<Article[]>([]);
   const [currentView, setCurrentView] = useState<'grid' | 'content'>('grid');
-  const [selectedContent, setSelectedContent] = useState<any>(null);
+  const [selectedContent, setSelectedContent] = useState<Content | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Content data
   const contentData = {
@@ -112,6 +138,7 @@ Advanced features include team collaboration, stack comparison matrices, and int
       author: 'Elena Rodriguez',
       readTime: '15 min read',
       date: 'Dec 10, 2024',
+      image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600&fit=crop',
       onClick: handleCardClick
     },
     {
@@ -127,7 +154,7 @@ Advanced features include team collaboration, stack comparison matrices, and int
       id: '4',
       title: 'Design Systems',
       description: 'Create consistent, scalable design languages.',
-      size: 'small',
+      size: 'medium',
       type: 'article',
       icon: <Palette className="h-5 w-5 text-gray-600" />,
       onClick: handleCardClick
@@ -136,7 +163,7 @@ Advanced features include team collaboration, stack comparison matrices, and int
       id: '5',
       title: 'Launch Playbook',
       description: 'Step-by-step guide to launching your SaaS.',
-      size: 'small',
+      size: 'medium',
       type: 'playbook',
       icon: <Rocket className="h-5 w-5 text-gray-600" />,
       onClick: handleCardClick
@@ -145,7 +172,7 @@ Advanced features include team collaboration, stack comparison matrices, and int
       id: '6',
       title: 'Growth Analytics',
       description: 'Track and optimize your key metrics.',
-      size: 'small',
+      size: 'medium',
       type: 'tool',
       icon: <BarChart3 className="h-5 w-5 text-gray-600" />,
       onClick: handleCardClick
@@ -166,7 +193,7 @@ Advanced features include team collaboration, stack comparison matrices, and int
       id: '8',
       title: 'Pricing Strategy',
       description: 'Optimize your pricing for maximum growth.',
-      size: 'small',
+      size: 'medium',
       type: 'article',
       icon: <Target className="h-5 w-5 text-gray-600" />,
       onClick: handleCardClick
@@ -258,20 +285,6 @@ Advanced features include team collaboration, stack comparison matrices, and int
     setFilteredArticles(filtered);
   }, [selectedTopic, searchQuery]);
 
-  const handleDownload = (title: string) => {
-    toast({
-      title: "Download started",
-      description: `Downloading "${title}"...`,
-    });
-  };
-
-  const handleToolLaunch = (toolName: string) => {
-    toast({
-      title: "Tool launched",
-      description: `Opening ${toolName}...`,
-    });
-  };
-
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     element?.scrollIntoView({ behavior: 'smooth' });
@@ -286,10 +299,25 @@ Advanced features include team collaboration, stack comparison matrices, and int
   };
 
   const handleArticleClick = (articleId: number) => {
-    toast({
-      title: "Article opened",
-      description: "Navigating to full article...",
-    });
+    const article = allArticles.find(a => a.id === articleId);
+    if (article) {
+      setSelectedContent({
+        id: String(article.id),
+        title: article.title,
+        content: article.fullContent,
+        author: article.author,
+        date: article.date,
+        readTime: article.readTime,
+        type: 'article',
+        image: article.image,
+      });
+      setCurrentView('content');
+    } else {
+      toast({
+        title: "Article not found",
+        description: "Sorry, this article could not be found.",
+      });
+    }
   };
 
   // Show content page if selected
@@ -303,73 +331,57 @@ Advanced features include team collaboration, stack comparison matrices, and int
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-100 font-sans">
       {/* Navigation */}
       <Navigation onSectionClick={scrollToSection} />
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16 bg-gradient-to-br from-white via-gray-50 to-gray-100">
-        <div className="container-premium relative z-10 text-center animate-fade-in">
-          <div className="max-w-5xl mx-auto">
-            <h1 className="text-6xl md:text-8xl lg:text-9xl font-light tracking-tight leading-none mb-8 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-600 bg-clip-text text-transparent">
-              MakerStack
-            </h1>
-            <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed font-light">
-              Premium insights, tools, and frameworks for makers building the future
-            </p>
-            
-            <div className="max-w-md mx-auto mb-8">
-              <NewsletterSignup variant="hero" />
-            </div>
-            
-            <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <Button 
-                onClick={() => scrollToSection('featured')}
-                variant="outline" 
-                className="bg-white/70 backdrop-blur-sm border border-gray-300 hover:bg-white text-gray-900 px-8 py-4 rounded-2xl text-lg font-medium transition-all duration-300 hover:shadow-lg"
-              >
-                <ArrowDown className="mr-3 h-4 w-4" />
-                Explore Content
-              </Button>
-            </div>
+      <section className="relative flex items-center justify-center pt-32 pb-20 bg-gradient-to-br from-gray-50 to-gray-200">
+        <div className="container max-w-7xl mx-auto px-4 text-center">
+          <h1 className="text-5xl md:text-7xl font-extralight tracking-tight leading-tight mb-6 text-gray-900">
+            MakerStack
+          </h1>
+          <p className="text-xl md:text-2xl text-gray-600 mb-10 max-w-3xl mx-auto font-light">
+            Premium insights, tools, and frameworks to empower makers building the future
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+            <Button 
+              onClick={() => scrollToSection('featured')}
+              variant="default"
+              className="px-10 py-4 rounded-full text-lg font-medium bg-gray-900 text-white hover:bg-gray-800 transition-all duration-300 shadow-lg"
+            >
+              Explore Content
+            </Button>
+            <Button
+              onClick={() => navigate('/articledetail')}
+              variant="outline"
+              className="px-10 py-4 rounded-full text-lg font-medium border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white transition-all duration-300"
+            >
+              View Article Demo
+            </Button>
           </div>
-        </div>
-      </section>
-
-      {/* Search Section */}
-      <section id="search" className="section-padding bg-white">
-        <div className="container-premium">
-          <SearchBar onSearch={handleSearch} onClear={handleClearSearch} />
-          {searchQuery && (
-            <div className="text-center mt-6">
-              <p className="text-gray-600">
-                Found {filteredArticles.length} results for "{searchQuery}"
-              </p>
-            </div>
-          )}
         </div>
       </section>
 
       {/* Featured Bento Grid Section */}
-      <section id="featured" className="section-padding bg-gray-50">
-        <div className="container-premium">
+      <section id="featured" className="py-20 bg-gray-50">
+        <div className="container max-w-7xl mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-light tracking-tight mb-6 text-gray-900">Featured Content</h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto font-light">
-              Handpicked insights and resources for ambitious makers
+              Curated resources and insights for ambitious makers
             </p>
           </div>
-          
           {/* Topic Filter */}
-          <div className="flex flex-wrap justify-center gap-3 mb-12">
+          <div className="flex flex-wrap justify-center gap-4 mb-12">
             {topics.slice(0, 6).map((topic) => (
               <button
                 key={topic.name}
                 onClick={() => setSelectedTopic(topic.name)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                className={`px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 ${
                   selectedTopic === topic.name
-                    ? 'bg-gray-900 text-white shadow-lg'
-                    : 'bg-white hover:bg-gray-100 text-gray-600 hover:text-gray-900 border border-gray-200'
+                    ? 'bg-gray-900 text-white shadow-md'
+                    : 'bg-white hover:bg-gray-100 text-gray-700 hover:text-gray-900 border border-gray-200'
                 }`}
                 aria-pressed={selectedTopic === topic.name}
               >
@@ -377,129 +389,100 @@ Advanced features include team collaboration, stack comparison matrices, and int
               </button>
             ))}
           </div>
-          
           {/* Bento Grid */}
-          <BentoGrid cards={bentoCards} className="mb-16" />
+          <BentoGrid 
+            cards={bentoCards} 
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-[250px] md:auto-rows-[300px]"
+          />
         </div>
       </section>
 
-      {/* Playbooks Section - 70/30 Split */}
-      <section id="playbooks" className="section-padding bg-white">
-        <div className="container-premium">
+      {/* Playbooks Section */}
+      <section id="playbooks" className="py-20 bg-white">
+        <div className="container max-w-7xl mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-light tracking-tight mb-6 text-gray-900">Maker Playbooks</h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto font-light">
-              Step-by-step guides and frameworks from successful makers
+              Comprehensive guides and frameworks from successful makers
             </p>
           </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-10 gap-8">
-            {/* Left Side - 70% */}
-            <div className="lg:col-span-7 space-y-6">
-              {/* Main Playbook Card */}
-              <Card className="bg-white border border-gray-200 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 group overflow-hidden hover:-translate-y-2 cursor-pointer">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 auto-rows-[200px] md:auto-rows-[250px]">
+            {/* Main Playbook Card */}
+            <div className="lg:col-span-2 lg:row-span-2">
+              <Card className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 group overflow-hidden hover:-translate-y-2 cursor-pointer h-full flex flex-col">
                 <div className="aspect-[16/9] overflow-hidden relative">
                   <img 
                     src={playbookCover} 
                     alt="SaaS Launch Playbook"
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   <div className="absolute top-6 right-6 bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 text-sm font-medium text-gray-900">
                     Premium
                   </div>
                 </div>
-                <CardContent className="p-8">
-                  <h3 className="text-2xl font-semibold mb-4 group-hover:text-gray-600 transition-colors text-gray-900">
+                <CardContent className="p-8 flex-1 flex flex-col">
+                  <h3 className="text-2xl font-semibold mb-4 group-hover:text-gray-700 transition-colors text-gray-900">
                     The Complete SaaS Launch Playbook
                   </h3>
-                  <p className="text-gray-600 mb-6 leading-relaxed">
+                  <p className="text-gray-600 mb-6 leading-relaxed flex-1">
                     From idea validation to first paying customers. A comprehensive guide covering market research, MVP development, pricing strategy, and growth tactics.
                   </p>
                   <div className="flex items-center justify-between mb-6">
                     <span className="text-sm text-gray-500">4.2k downloads</span>
                     <Badge className="bg-gray-100 text-gray-800 border-gray-200">142 pages</Badge>
                   </div>
-                  <Button 
-                    onClick={() => handleDownload("SaaS Launch Playbook")}
-                    className="w-full rounded-2xl bg-gray-900 hover:bg-gray-800 text-white transition-all duration-300"
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Download Playbook
-                  </Button>
                 </CardContent>
               </Card>
-
-              {/* Three Sub-cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {[
-                  {
-                    title: "Product Hunt Launch Guide",
-                    downloads: "1.8k",
-                    pages: "24"
-                  },
-                  {
-                    title: "No-Code MVP Builder",
-                    downloads: "2.1k", 
-                    pages: "36"
-                  },
-                  {
-                    title: "Maker Marketing Toolkit",
-                    downloads: "1.5k",
-                    pages: "28"
-                  }
-                ].map((playbook, index) => (
-                  <Card key={index} className="bg-white border border-gray-200 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 group hover:-translate-y-1 cursor-pointer">
-                    <CardContent className="p-6">
-                      <div className="bg-gray-100 rounded-xl w-12 h-12 flex items-center justify-center mb-4 group-hover:bg-gray-200 transition-colors duration-300">
-                        <FileText className="h-6 w-6 text-gray-600" />
-                      </div>
-                      <h4 className="font-semibold mb-2 group-hover:text-gray-600 transition-colors text-gray-900">{playbook.title}</h4>
-                      <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                        <span>{playbook.downloads} downloads</span>
-                        <span>{playbook.pages} pages</span>
-                      </div>
-                      <Button 
-                        onClick={() => handleDownload(playbook.title)}
-                        variant="outline" 
-                        size="sm"
-                        className="w-full rounded-xl border-gray-300 hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all duration-300"
-                      >
-                        Download
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
             </div>
-
-            {/* Right Side - 30% Trending Topics */}
-            <div className="lg:col-span-3">
-              <Card className="bg-white border border-gray-200 rounded-3xl shadow-lg sticky top-24">
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold mb-6 text-gray-900">Trending Topics</h3>
-                  <div className="space-y-4">
+            {/* Sub-cards */}
+            {[
+              { title: "Product Hunt Launch Guide", downloads: "1.8k", pages: "24" },
+              { title: "No-Code MVP Builder", downloads: "2.1k", pages: "36" },
+              { title: "Maker Marketing Toolkit", downloads: "1.5k", pages: "28" }
+            ].map((item, index) => (
+              <div key={index} className="lg:col-span-1 lg:row-span-1">
+                <Card className="bg-white border border-gray-200 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 group hover:-translate-y-1 cursor-pointer h-full flex flex-col">
+                  <CardContent className="p-6 flex-1 flex flex-col">
+                    <div className="bg-gray-100 rounded-xl w-12 h-12 flex items-center justify-center mb-4 group-hover:bg-gray-200 transition-colors duration-300">
+                      <FileText className="h-6 w-6 text-gray-600" />
+                    </div>
+                    <h4 className="font-semibold mb-2 group-hover:text-gray-700 transition-colors text-gray-900">{item.title}</h4>
+                    <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                      <span>{item.downloads} downloads</span>
+                      <span>{item.pages} pages</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            ))}
+            {/* Trending Topics */}
+            <div className="lg:col-span-1 lg:row-span-3">
+              <Card className="bg-white border border-gray-200 rounded-3xl shadow-lg sticky top-24 h-full flex flex-col">
+                <CardContent className="p-6 flex-1 flex flex-col">
+                  <h3 className="text-lg font-semibold mb-6 text-gray-900">Trending Maker Topics</h3>
+                  <div className="space-y-6 flex-1">
                     {[
-                      { topic: "AI Integration", engagement: "94%", trend: "+12%" },
-                      { topic: "No-Code Tools", engagement: "87%", trend: "+8%" },
-                      { topic: "Product Strategy", engagement: "82%", trend: "+15%" },
-                      { topic: "Growth Hacking", engagement: "79%", trend: "+6%" },
-                      { topic: "User Research", engagement: "76%", trend: "+11%" }
+                      { topic: "SaaS Development", engagement: 94 },
+                      { topic: "Indie Maker Trends", engagement: 87 },
+                      { topic: "No-Code Solutions", engagement: 82 },
+                      { topic: "Growth Hacking", engagement: 79 },
+                      { topic: "Pricing Strategies", engagement: 76 }
                     ].map((item, index) => (
                       <button
                         key={index}
                         onClick={() => setSelectedTopic(item.topic)}
-                        className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors duration-300 cursor-pointer group text-left"
+                        className="w-full flex flex-col p-3 rounded-xl hover:bg-gray-50 transition-colors duration-300 cursor-pointer group text-left"
                         aria-label={`View ${item.topic} articles`}
                       >
-                        <div>
-                          <p className="font-medium group-hover:text-gray-600 transition-colors text-gray-900">{item.topic}</p>
-                          <p className="text-sm text-gray-500">{item.engagement} engagement</p>
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="font-medium group-hover:text-gray-700 transition-colors text-gray-900">{item.topic}</p>
+                          <TrendingUp className="h-4 w-4 text-blue-600" />
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm font-medium text-green-600">{item.trend}</p>
-                          <TrendingUp className="h-4 w-4 text-green-600 ml-auto" />
+                        <div className="text-sm text-gray-500 mb-1">{item.engagement}% engagement</div>
+                        <div className="w-full bg-gray-200 rounded-full h-1.5">
+                          <div className="bg-blue-600 h-1.5 rounded-full" style={{ width: `${item.engagement}%` }} />
                         </div>
                       </button>
                     ))}
@@ -512,15 +495,14 @@ Advanced features include team collaboration, stack comparison matrices, and int
       </section>
 
       {/* Tools Section */}
-      <section id="tools" className="section-padding bg-gray-50">
-        <div className="container-premium">
+      <section id="tools" className="py-20 bg-gray-50">
+        <div className="container max-w-7xl mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-light tracking-tight mb-6 text-gray-900">Maker Tools</h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto font-light">
-              Powerful utilities to accelerate your building process
+              Streamline your building process with powerful utilities
             </p>
           </div>
-          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               {
@@ -560,10 +542,10 @@ Advanced features include team collaboration, stack comparison matrices, and int
                 status: "Coming Soon"
               }
             ].map((tool, index) => (
-              <Card key={index} className="bg-white border border-gray-200 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 group text-center hover:-translate-y-1 cursor-pointer">
+              <Card key={index} className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 group text-center hover:-translate-y-1 cursor-pointer">
                 <CardContent className="p-8">
                   <div className="relative">
-                    <div className="bg-gray-100 rounded-3xl w-20 h-20 flex items-center justify-center mx-auto mb-6 group-hover:bg-gray-200 group-hover:scale-110 transition-all duration-300">
+                    <div className="bg-gray-100 rounded-3xl w-20 h-20 flex items-center justify-center mx-auto mb-6 group-hover:bg-gray-200 group-hover:scale-105 transition-all duration-300">
                       <div className="text-gray-600">
                         {tool.icon}
                       </div>
@@ -572,17 +554,10 @@ Advanced features include team collaboration, stack comparison matrices, and int
                       {tool.status}
                     </Badge>
                   </div>
-                  <h3 className="text-xl font-semibold mb-4 group-hover:text-gray-600 transition-colors text-gray-900">{tool.title}</h3>
+                  <h3 className="text-xl font-semibold mb-4 group-hover:text-gray-700 transition-colors text-gray-900">{tool.title}</h3>
                   <p className="text-gray-600 mb-8 leading-relaxed">
                     {tool.description}
                   </p>
-                  <Button 
-                    onClick={() => handleToolLaunch(tool.title)}
-                    variant="outline" 
-                    className="w-full rounded-2xl border-gray-300 hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all duration-300"
-                  >
-                    Try Now
-                  </Button>
                 </CardContent>
               </Card>
             ))}
@@ -590,30 +565,55 @@ Advanced features include team collaboration, stack comparison matrices, and int
         </div>
       </section>
 
-      {/* Income Reports */}
-      <section id="reports" className="section-padding bg-white">
-        <div className="container-premium">
+      {/* Income Reports Section */}
+      <section id="income-reports" className="py-20 bg-white">
+        <div className="container max-w-7xl mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-light tracking-tight mb-6 text-gray-900">Growth Metrics</h2>
+            <h2 className="text-4xl md:text-5xl font-light tracking-tight mb-6 text-gray-900">Income Reports</h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto font-light">
-              Transparent insights into our community growth and engagement
+              Transparent financial insights from the maker community
             </p>
           </div>
-          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { metric: "Monthly Revenue", value: "$67.4k", change: "+18.2%", trend: "up" },
-              { metric: "Active Makers", value: "24.7k", change: "+24.1%", trend: "up" },
-              { metric: "Tools Created", value: "156", change: "+31.5%", trend: "up" },
-              { metric: "Community Growth", value: "89.3%", change: "+12.7%", trend: "up" }
-            ].map((report, index) => (
-              <Card key={index} className="bg-white border border-gray-200 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer">
-                <CardContent className="p-6">
-                  <div className="text-sm text-gray-500 mb-2">{report.metric}</div>
-                  <div className="text-3xl font-light mb-2 text-gray-900">{report.value}</div>
-                  <div className={`text-sm flex items-center ${report.trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+              {
+                label: 'Indie SaaS (example.com)',
+                value: '$12,400/mo',
+                source: 'Public Revenue',
+                trend: '+8.2%',
+                icon: <BarChart3 className="h-6 w-6 text-green-600" />,
+              },
+              {
+                label: 'YouTube Channel (TechGuru)',
+                value: '$3,200/mo',
+                source: 'Social Blade',
+                trend: '+3.1%',
+                icon: <TrendingUp className="h-6 w-6 text-blue-600" />,
+              },
+              {
+                label: 'Newsletter (GrowthDaily)',
+                value: '$1,800/mo',
+                source: 'Self-Reported',
+                trend: '+5.7%',
+                icon: <Users className="h-6 w-6 text-purple-600" />,
+              },
+              {
+                label: 'E-commerce (Shoply)',
+                value: '$22,900/mo',
+                source: 'BuiltWith',
+                trend: '+12.4%',
+                icon: <Rocket className="h-6 w-6 text-pink-600" />,
+              },
+            ].map((stat, idx) => (
+              <Card key={idx} className="bg-gradient-to-br from-gray-50 to-white border border-gray-200 rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 group cursor-pointer">
+                <CardContent className="p-6 flex flex-col items-center text-center">
+                  <div className="mb-4">{stat.icon}</div>
+                  <div className="text-lg font-semibold mb-1 text-gray-900">{stat.label}</div>
+                  <div className="text-3xl font-light mb-2 text-gray-900">{stat.value}</div>
+                  <div className="text-xs text-gray-500 mb-1">{stat.source}</div>
+                  <div className="text-sm flex items-center justify-center text-green-600 font-medium">
                     <TrendingUp className="h-4 w-4 mr-1" />
-                    {report.change}
+                    {stat.trend}
                   </div>
                 </CardContent>
               </Card>
@@ -622,34 +622,28 @@ Advanced features include team collaboration, stack comparison matrices, and int
         </div>
       </section>
 
-      {/* Latest Articles - Traditional Grid */}
-      <section className="section-padding bg-gray-50">
-        <div className="container-premium">
+      {/* Latest Articles */}
+      <section className="py-20 bg-gray-50">
+        <div className="container max-w-7xl mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-light tracking-tight mb-6 text-gray-900">Latest Articles</h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto font-light">
               Fresh insights and tutorials from the maker community
             </p>
           </div>
-          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredArticles.map((article) => (
-              <ArticleCard
-                key={article.id}
-                title={article.title}
-                excerpt={article.excerpt}
-                fullContent={article.fullContent}
-                author={article.author}
-                date={article.date}
-                topic={article.topic}
-                readTime={article.readTime}
-                image={article.image}
-                searchQuery={searchQuery}
-                onClick={() => handleArticleClick(article.id)}
-              />
+              <div key={article.id} onClick={() => handleArticleClick(article.id)} style={{ cursor: 'pointer' }}>
+                <ArticleCard
+                  title={article.title}
+                  topic={article.topic}
+                  date={article.date}
+                  image={article.image}
+                  searchQuery={searchQuery}
+                />
+              </div>
             ))}
           </div>
-          
           {filteredArticles.length === 0 && searchQuery && (
             <div className="text-center py-12">
               <p className="text-gray-600 text-lg">
@@ -668,8 +662,8 @@ Advanced features include team collaboration, stack comparison matrices, and int
       </section>
 
       {/* Newsletter Subscription Section */}
-      <section id="subscribe" className="section-padding bg-white">
-        <div className="container-premium">
+      <section id="subscribe" className="py-20 bg-white">
+        <div className="container max-w-7xl mx-auto px-4">
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="text-4xl md:text-5xl font-light tracking-tight mb-6 text-gray-900">Join the Community</h2>
             <p className="text-xl text-gray-600 mb-8 font-light">
@@ -682,7 +676,7 @@ Advanced features include team collaboration, stack comparison matrices, and int
 
       {/* Footer */}
       <footer className="border-t border-gray-200 bg-gray-50">
-        <div className="container-premium py-16">
+        <div className="container max-w-7xl mx-auto px-4 py-16">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="text-xl font-semibold mb-4 text-gray-900">MakerStack</div>
@@ -696,7 +690,7 @@ Advanced features include team collaboration, stack comparison matrices, and int
                 <button onClick={() => scrollToSection('featured')} className="block text-gray-600 hover:text-gray-900 transition-colors text-sm">Articles</button>
                 <button onClick={() => scrollToSection('playbooks')} className="block text-gray-600 hover:text-gray-900 transition-colors text-sm">Playbooks</button>
                 <button onClick={() => scrollToSection('tools')} className="block text-gray-600 hover:text-gray-900 transition-colors text-sm">Tools</button>
-                <button onClick={() => scrollToSection('reports')} className="block text-gray-600 hover:text-gray-900 transition-colors text-sm">Reports</button>
+                <button onClick={() => scrollToSection('income-reports')} className="block text-gray-600 hover:text-gray-900 transition-colors text-sm">Reports</button>
               </div>
             </div>
             <div>
@@ -720,7 +714,7 @@ Advanced features include team collaboration, stack comparison matrices, and int
           </div>
           <div className="border-t border-gray-200 pt-8 text-center">
             <p className="text-gray-500 text-sm">
-              © 2024 MakerStack. All rights reserved.
+              © 2025 MakerStack. All rights reserved.
             </p>
           </div>
         </div>
